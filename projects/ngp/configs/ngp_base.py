@@ -84,3 +84,5 @@ load_ckpt = False
 ckpt_path = None
 # test output image with alpha
 alpha_image = False
+# show loss every n steps
+show_loss_step = 100

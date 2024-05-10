@@ -36,6 +36,7 @@ class Runner():
         self.optimizer = build_from_cfg(self.cfg.expdecay, OPTIMS, nested_optimizer=self.optimizer)
         self.ema_optimizer = build_from_cfg(self.cfg.ema, OPTIMS, params=self.model.parameters())
         self.loss_func = build_from_cfg(self.cfg.loss, LOSSES)
+        self.show_loss_step = self.cfg.show_loss_step
         self.background_color = self.cfg.background_color
         self.tot_train_steps = self.cfg.tot_train_steps
         self.n_rays_per_batch = self.cfg.n_rays_per_batch
@@ -60,7 +61,8 @@ class Runner():
         self.H = self.image_resolutions[1]
 
     def train(self):
-        for i in tqdm(range(self.start, self.tot_train_steps)):
+        pbar = tqdm(range(self.start, self.tot_train_steps))
+        for i in pbar:
             self.cfg.m_training_step = i
             img_ids, rays_o, rays_d, rgb_target = next(self.dataset["train"])
             training_background_color = jt.random([rgb_target.shape[0], 3]).stop_grad()
@@ -73,6 +75,8 @@ class Runner():
             rgb = self.sampler.rays2rgb(network_outputs, training_background_color)
 
             loss = self.loss_func(rgb, rgb_target)
+            if i % self.show_loss_step == 0:
+                pbar.set_description(f"L1 Loss={loss.abs().mean()}")
             self.optimizer.step(loss)
             self.ema_optimizer.ema_step()
             if self.using_fp16:
