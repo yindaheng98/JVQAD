@@ -76,7 +76,7 @@ class Runner():
 
             loss = self.loss_func(rgb, rgb_target)
             if i % self.show_loss_step == 0:
-                pbar.set_description(f"L1 Loss={loss.abs().mean()}")
+                pbar.set_description(f"L1 Loss={loss.mean().item()}")
             self.optimizer.step(loss)
             self.ema_optimizer.ema_step()
             if self.using_fp16:
@@ -84,7 +84,7 @@ class Runner():
 
             if i > 0 and i % self.val_freq == 0:
                 psnr = mse2psnr(self.val_img(i))
-                print("STEP={} | LOSS={} | VAL PSNR={}".format(i, loss.mean().item(), psnr))
+                print("STEP={} | VAL PSNR={}".format(i, psnr))
         self.save_ckpt(os.path.join(self.save_path, "params.pkl"))
         self.test()
 
